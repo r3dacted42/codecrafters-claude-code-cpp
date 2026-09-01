@@ -18,6 +18,9 @@ set -e # Exit early if any commands fail
   cmake --build ./build
 )
 
+# read .env file and export variables
+set -a && source .env && set +a
+
 # Copied from .codecrafters/run.sh
 #
 # - Edit this to change how your program runs locally
