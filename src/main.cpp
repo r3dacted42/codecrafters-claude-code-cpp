@@ -34,15 +34,38 @@ int main(int argc, char *argv[]) {
   }
 
   json request_body = {
-      {"model", model_name},
-      {"messages", json::array({{{"role", "user"}, {"content", prompt}}})}};
+    { "model", model_name },
+    { "messages", json::array({ {
+                    { "role", "user" },
+                    { "content", prompt },
+                  } }) },
+    { "tools", json::array({ {
+                 { "type", "function" },
+                 { "function",
+                   {
+                     { "name", "Read" },
+                     { "description", "Read and return the contents of a file" },
+                     { "parameters",
+                       {
+                         { "type", "object" },
+                         { "properties",
+                           {
+                             { "file_path",
+                               {
+                                 { "type", "string" },
+                                 { "description", "The path to the file to read" },
+                               } },
+                           } },
+                         { "required", json::array({ "file_path" }) },
+                       } },
+                   } },
+               } }) },
+  };
 
   cpr::Response response = cpr::Post(
-      cpr::Url{base_url + "/chat/completions"},
-      cpr::Header{
-          {"Authorization", "Bearer " + api_key},
-          {"Content-Type", "application/json"}},
-      cpr::Body{request_body.dump()});
+    cpr::Url{ base_url + "/chat/completions" },
+    cpr::Header{ { "Authorization", "Bearer " + api_key }, { "Content-Type", "application/json" } },
+    cpr::Body{ request_body.dump() });
 
   if (response.status_code != 200) {
     std::cerr << "HTTP error: " << response.status_code << std::endl;
@@ -56,8 +79,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  // You can use print statements as follows for debugging, they'll be visible when running tests.
-  // std::cerr << "Logs from your program will appear here!" << std::endl;
+  // You can use print statements as follows for debugging, they'll be visible
+  // when running tests. std::cerr << "Logs from your program will appear here!"
+  // << std::endl;
 
   // TODO: Uncomment the line below to pass the first stage
   std::cout << result["choices"][0]["message"]["content"].get<std::string>() << std::endl;
