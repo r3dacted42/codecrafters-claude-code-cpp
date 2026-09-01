@@ -2,10 +2,8 @@
 #include <iostream>
 #include <string>
 
-#include <cpr/cpr.h>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
+#include "client.hpp"
+#include "read.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -33,58 +31,14 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  json request_body = {
-    { "model", model_name },
-    { "messages", json::array({ {
-                    { "role", "user" },
-                    { "content", prompt },
-                  } }) },
-    { "tools", json::array({ {
-                 { "type", "function" },
-                 { "function",
-                   {
-                     { "name", "Read" },
-                     { "description", "Read and return the contents of a file" },
-                     { "parameters",
-                       {
-                         { "type", "object" },
-                         { "properties",
-                           {
-                             { "file_path",
-                               {
-                                 { "type", "string" },
-                                 { "description", "The path to the file to read" },
-                               } },
-                           } },
-                         { "required", json::array({ "file_path" }) },
-                       } },
-                   } },
-               } }) },
-  };
+  Client client(api_key, base_url);
+  client.set_system_prompt("You are a helpful assistant.");
+  client.register_tool(tools::read::name, tools::read::schema, tools::read::function);
 
-  cpr::Response response = cpr::Post(
-    cpr::Url{ base_url + "/chat/completions" },
-    cpr::Header{ { "Authorization", "Bearer " + api_key }, { "Content-Type", "application/json" } },
-    cpr::Body{ request_body.dump() });
+  api::Message user_message{ "user", prompt };
+  std::string response = client.chat(model_name, user_message);
 
-  if (response.status_code != 200) {
-    std::cerr << "HTTP error: " << response.status_code << std::endl;
-    return 1;
-  }
-
-  json result = json::parse(response.text);
-
-  if (!result.contains("choices") || result["choices"].empty()) {
-    std::cerr << "No choices in response" << std::endl;
-    return 1;
-  }
-
-  // You can use print statements as follows for debugging, they'll be visible
-  // when running tests. std::cerr << "Logs from your program will appear here!"
-  // << std::endl;
-
-  // TODO: Uncomment the line below to pass the first stage
-  std::cout << result["choices"][0]["message"]["content"].get<std::string>() << std::endl;
+  std::cout << response << std::endl;
 
   return 0;
 }
