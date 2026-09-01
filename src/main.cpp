@@ -32,7 +32,8 @@ int main(int argc, char* argv[]) {
     }
 
     json request_body = {
-        {"model", "anthropic/claude-haiku-4.5"},
+        // {"model", "anthropic/claude-haiku-4.5"},
+        {"model", "z-ai/glm-5.2:free"},
         {"messages", json::array({
             {{"role", "user"}, {"content", prompt}}
         })}
@@ -63,7 +64,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "Logs from your program will appear here!" << std::endl;
 
     // TODO: Uncomment the line below to pass the first stage
-    // std::cout << result["choices"][0]["message"]["content"].get<std::string>();
+    std::cout << result["choices"][0]["message"]["content"].get<std::string>();
 
     return 0;
 }
