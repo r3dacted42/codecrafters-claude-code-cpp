@@ -12,7 +12,6 @@
 class Client : private tools::Registry {
   std::string api_key_;
   std::string base_url_;
-  tools::Registry tools_registry_;
   std::vector<api::Message> messages_;
 
 public:
@@ -43,9 +42,8 @@ public:
         { "model", model },
         { "messages", messages_ },
       };
-      if (!tools_registry_.get_tools_schema().empty()) {
-        payload["tools"] = tools_registry_.get_tools_schema();
-      }
+      if (!get_tools_schema().empty())
+        payload["tools"] = get_tools_schema();
 
       cpr::Response response = cpr::Post(cpr::Url{ base_url_ + "/chat/completions" },
                                          cpr::Header{ { "Authorization", "Bearer " + api_key_ },
@@ -73,7 +71,7 @@ public:
         for (const auto &tc : *assistant_msg.tool_calls) {
           std::string tool_name = tc.function.name;
           std::string tool_args = tc.function.arguments;
-          std::string tool_response = tools_registry_.execute(tool_name, tool_args);
+          std::string tool_response = execute(tool_name, tool_args);
           messages_.push_back({ "tool", tool_response, tc.id, tool_name });
         }
         looping = true;

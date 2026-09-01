@@ -10,13 +10,13 @@ using json = nlohmann::json;
 using namespace nlohmann::literals;
 namespace fs = std::filesystem;
 
-namespace tools::read {
+namespace tools::read_file {
 
-const std::string name = "read";
+const std::string name = "read_file";
 
 const json schema = R"({
-  "name": "read",
-  "description": "Read the contents of a file.",
+  "name": "read_file",
+  "description": "Read and return the contents of a file.",
   "parameters": {
     "type": "object",
     "properties": {
@@ -26,7 +26,7 @@ const json schema = R"({
       },
       "max_lines": {
         "type": "integer",
-        "description": "The maximum number of lines to read from the file. If not specified, read the entire file."
+        "description": "The maximum number of lines to read from the file. If not specified, reads the entire file."
       }
     },
     "required": ["file_path"]

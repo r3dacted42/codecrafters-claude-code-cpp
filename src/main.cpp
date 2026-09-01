@@ -3,7 +3,7 @@
 #include <string>
 
 #include "client.hpp"
-#include "read.hpp"
+#include "read_file.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -32,8 +32,12 @@ int main(int argc, char *argv[]) {
   }
 
   Client client(api_key, base_url);
-  client.set_system_prompt("You are a helpful assistant.");
-  client.register_tool(tools::read::name, tools::read::schema, tools::read::function);
+  client.set_system_prompt(
+    "You are a helpful AI assistant. You have access to external tools. "
+    "If a user asks about file contents, you MUST use the 'read_file' tool to fetch the data. "
+    "Never guess or hallucinate file contents.");
+  client.register_tool(tools::read_file::name, tools::read_file::schema,
+                       tools::read_file::function);
 
   api::Message user_message{ "user", prompt };
   std::string response = client.chat(model_name, user_message);
