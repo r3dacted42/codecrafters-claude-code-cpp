@@ -5,6 +5,7 @@
 #include "client.hpp"
 #include "read_file.hpp"
 #include "write_file.hpp"
+#include "run_bash_cmd.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -37,6 +38,8 @@ int main(int argc, char *argv[]) {
                        tools::read_file::function);
   client.register_tool(tools::write_file::name, tools::write_file::schema,
                        tools::write_file::function);
+  client.register_tool(tools::run_bash_cmd::name, tools::run_bash_cmd::schema,
+                       tools::run_bash_cmd::function);
 
   api::Message user_message{ "user", prompt };
   std::string response;
