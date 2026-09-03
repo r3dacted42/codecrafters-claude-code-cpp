@@ -4,6 +4,7 @@
 
 #include "client.hpp"
 #include "read_file.hpp"
+#include "write_file.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -34,6 +35,8 @@ int main(int argc, char *argv[]) {
   Client client(api_key, base_url);
   client.register_tool(tools::read_file::name, tools::read_file::schema,
                        tools::read_file::function);
+  client.register_tool(tools::write_file::name, tools::write_file::schema,
+                       tools::write_file::function);
 
   api::Message user_message{ "user", prompt };
   std::string response;
