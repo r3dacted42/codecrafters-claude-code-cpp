@@ -5,6 +5,18 @@
 
 using json = nlohmann::json;
 
+namespace std {
+
+template <typename T> void from_json(const json &j, std::optional<T> &opt) {
+  if (j.is_null()) {
+    opt = std::nullopt;
+  } else {
+    opt = j.get<T>();
+  }
+}
+
+} // namespace std
+
 namespace api {
 
 struct FunctionCall {
@@ -22,8 +34,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ToolCall, id, type, function)
 
 struct Message {
   std::string role;
-  std::string content;
-
+  std::optional<std::string> content;
   std::optional<std::string> tool_call_id;
   std::optional<std::string> name;
   std::optional<std::vector<ToolCall>> tool_calls;
@@ -31,10 +42,8 @@ struct Message {
 
 void to_json(json &j, const Message &m) {
   j = json{ { "role", m.role } };
-  if (m.content.empty() && m.tool_calls.has_value())
-    j["content"] = nullptr;
-  else
-    j["content"] = m.content;
+  if (m.content)
+    j["content"] = *m.content;
   if (m.tool_call_id)
     j["tool_call_id"] = *m.tool_call_id;
   if (m.name)

@@ -61,9 +61,8 @@ public:
       auto &choice = result["choices"][0]["message"];
 
       api::Message assistant_msg;
-      assistant_msg.role = choice.value("role", "");
-      assistant_msg.content = choice.value("content", "");
-
+      assistant_msg.role = choice.value("role", "assistant");
+      assistant_msg.content = choice.value<std::optional<std::string>>("content", std::nullopt);
       if (choice.contains("tool_calls")) {
         assistant_msg.tool_calls = choice["tool_calls"].get<std::vector<api::ToolCall>>();
         messages_.push_back(assistant_msg);
@@ -79,6 +78,6 @@ public:
         messages_.push_back(assistant_msg);
       }
     }
-    return messages_.back().content;
+    return messages_.back().content.value_or("<no response>");
   }
 };

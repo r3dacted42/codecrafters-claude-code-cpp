@@ -16,7 +16,7 @@ const std::string name = "read_file";
 
 const json schema = R"({
   "name": "read_file",
-  "description": "Read and return the contents of a file.",
+  "description": "Read and return the contents of a file or error in format { error: string }",
   "parameters": {
     "type": "object",
     "properties": {
@@ -53,7 +53,7 @@ std::string function(const json &args) {
         count++;
       }
     }
-    return json({ "content", content }).dump();
+    return content;
   } catch (const std::ifstream::failure &e) {
     return json({ "error", "Exception reading file: " + std::string(e.what()) }).dump();
   } catch (const std::exception &e) {

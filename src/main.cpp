@@ -32,15 +32,17 @@ int main(int argc, char *argv[]) {
   }
 
   Client client(api_key, base_url);
-  client.set_system_prompt(
-    "You are a helpful AI assistant. You have access to external tools. "
-    "If a user asks about file contents, you MUST use the 'read_file' tool to fetch the data. "
-    "Never guess or hallucinate file contents.");
   client.register_tool(tools::read_file::name, tools::read_file::schema,
                        tools::read_file::function);
 
   api::Message user_message{ "user", prompt };
-  std::string response = client.chat(model_name, user_message);
+  std::string response;
+  try {
+    response = client.chat(model_name, user_message);
+  } catch (const std::exception &e) {
+    std::cerr << "Error during chat: " << e.what() << std::endl;
+    return 1;
+  }
 
   std::cout << response << std::endl;
 
