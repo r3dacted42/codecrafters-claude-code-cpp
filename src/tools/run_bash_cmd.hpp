@@ -32,15 +32,22 @@ const json schema = R"({
 
 std::string function(const json &args) {
   std::string command = args.value("command", "");
-  command += " 2>&1 >" + std::filesystem::temp_directory_path().string() + "/bash_output.txt";
+  fs::path tmp_file = std::filesystem::temp_directory_path() / std::format("bash_output_{}.txt", std::time(nullptr));
+  command += " 2>&1 >" + tmp_file.string();
   int result = std::system(command.c_str());
-  if (result != 0)
+  if (result != 0) {
+    std::filesystem::remove(tmp_file);
     return json({ "error", "Failed to execute command" }).dump();
-  std::ifstream output_file(std::filesystem::temp_directory_path() / "bash_output.txt");
-  if (!output_file.is_open())
+  }
+  std::ifstream output_file(tmp_file);
+  if (!output_file.is_open()) {
+    std::filesystem::remove(tmp_file);
     return json({ "error", "Failed to open output file" }).dump();
-  std::string output((std::istreambuf_iterator<char>(output_file)), std::istreambuf_iterator<char>());
+  }
+  std::string output((std::istreambuf_iterator<char>(output_file)),
+                     std::istreambuf_iterator<char>());
   output_file.close();
+  std::filesystem::remove(tmp_file);
   return json({ "result", output }).dump();
 }
 
