@@ -33,10 +33,10 @@ public:
 
   void unregister_tool(const std::string &name) {
     tools_.erase(name);
-    tools_array_.erase(std::remove_if(tools_array_.begin(), tools_array_.end(),
-      [&name](const json &tool) {
-        return tool["function"]["name"] == name;
-      }), tools_array_.end());
+    tools_array_.erase(
+      std::remove_if(tools_array_.begin(), tools_array_.end(),
+                     [&name](const json &tool) { return tool["function"]["name"] == name; }),
+      tools_array_.end());
   }
 
   const json &get_tools_schema() const {

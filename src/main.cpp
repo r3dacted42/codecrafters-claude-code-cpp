@@ -6,6 +6,7 @@
 #include "read_file.hpp"
 #include "write_file.hpp"
 #include "run_bash_cmd.hpp"
+#include "skills.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -34,13 +35,12 @@ int main(int argc, char *argv[]) {
   }
 
   Client client(api_key, base_url);
-  client.register_tool(tools::read_file::name, tools::read_file::schema,
-                       tools::read_file::function);
-  client.register_tool(tools::write_file::name, tools::write_file::schema,
-                       tools::write_file::function);
-  client.register_tool(tools::run_bash_cmd::name, tools::run_bash_cmd::schema,
-                       tools::run_bash_cmd::function);
+  REGISTER_TOOL(client, read_file)
+  REGISTER_TOOL(client, write_file)
+  REGISTER_TOOL(client, run_bash_cmd)
 
+  Skills::load_skills(fs::path(".claude/skills"));
+  client.set_system_prompt("You have access to the following skills:\n\n" + Skills::get_metadata_str());
   api::Message user_message{ "user", prompt };
   std::string response;
   try {

@@ -81,3 +81,6 @@ public:
     return messages_.back().content.value_or("<no response>");
   }
 };
+
+#define REGISTER_TOOL(registry, _name)                                                             \
+  registry.register_tool(tools::_name::name, tools::_name::schema, tools::_name::function);

@@ -1,6 +1,7 @@
 {
-    "dependencies": [
-        "cpr",
-        "nlohmann-json"
-    ]
+  "dependencies": [
+    "cpr",
+    "nlohmann-json",
+    "ryml"
+  ]
 }

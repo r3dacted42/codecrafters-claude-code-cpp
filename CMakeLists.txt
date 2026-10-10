@@ -8,6 +8,7 @@ file(GLOB_RECURSE SOURCE_FILES src/*.cpp src/*.hpp)
 
 find_package(cpr CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(ryml CONFIG REQUIRED)
 
 add_executable(claude-code ${SOURCE_FILES})
 
@@ -16,4 +17,4 @@ target_include_directories(claude-code PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src/tools
 )
 
-target_link_libraries(claude-code PRIVATE cpr::cpr nlohmann_json::nlohmann_json)
+target_link_libraries(claude-code PRIVATE cpr::cpr nlohmann_json::nlohmann_json ryml::ryml c4core::c4core)
