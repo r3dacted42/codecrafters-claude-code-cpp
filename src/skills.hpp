@@ -9,6 +9,7 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+#include <optional>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -88,5 +89,14 @@ public:
       ss << "- " << skill_metadata.name << ": " << skill_metadata.description << "\n";
     }
     return ss.str();
+  }
+
+  static std::optional<std::string> get_skill_body(const std::string &skill_name) {
+    Skills &instance = Skills::instance();
+    auto it = instance.skills_.find(skill_name);
+    if (it != instance.skills_.end()) {
+      return it->second.body;
+    }
+    return std::nullopt;
   }
 };

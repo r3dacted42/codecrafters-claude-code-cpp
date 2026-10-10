@@ -42,7 +42,18 @@ int main(int argc, char *argv[]) {
   if (Skills::load_skills(fs::path(".claude/skills")))
     client.set_system_prompt(Skills::get_metadata_str());
 
+  if (prompt.front() == '/') {
+    std::string skill_name = prompt.substr(1);
+    auto skill_body_opt = Skills::get_skill_body(skill_name);
+    if (skill_body_opt) {
+      prompt = *skill_body_opt;
+    } else {
+      std::cerr << "Skill not found: " << skill_name << std::endl;
+      return 1;
+    }
+  }
   api::Message user_message{ "user", prompt };
+  
   std::string response;
   try {
     response = client.chat(model_name, user_message);
