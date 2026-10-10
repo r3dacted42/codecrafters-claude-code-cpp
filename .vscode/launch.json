@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/claude-code",
-      "args": ["-p", "What are the contents of apple.py? Print the exact file contents without backticks."],
+      "args": ["-p", "/kestrel"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

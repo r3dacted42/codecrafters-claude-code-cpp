@@ -111,11 +111,13 @@ public:
     if (!skill_body_opt.has_value()) {
       throw std::runtime_error("Skill not found: " + skill_name);
     }
-    std::string skill_body = *skill_body_opt;
-    std::string args_str = ss.str().substr(ss.tellg());
+    std::string skill_body = *skill_body_opt, args_str = "";
+    std::getline(ss, args_str);
     if (args_str.empty()) {
       return skill_body;
     }
+    ss.clear();
+    ss.str(args_str);
     std::vector<std::string> args;
     while (ss) {
       std::string arg;
