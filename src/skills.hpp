@@ -4,12 +4,12 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <ryml/ryml.hpp>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <optional>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -98,5 +98,44 @@ public:
       return it->second.body;
     }
     return std::nullopt;
+  }
+
+  static std::string get_skill_prompt(const std::string &skill_invocation) {
+    Skills &instance = Skills::instance();
+    std::stringstream ss(skill_invocation);
+    std::string skill_name;
+    ss >> skill_name;
+    auto skill_body_opt = Skills::get_skill_body(skill_name);
+    if (!skill_body_opt.has_value()) {
+      throw std::runtime_error("Skill not found: " + skill_name);
+    }
+    std::string skill_body = *skill_body_opt;
+    std::string args_str = ss.str().substr(ss.tellg());
+    std::vector<std::string> args;
+    while (ss) {
+      std::string arg;
+      ss >> arg;
+      if (!arg.empty()) {
+        args.push_back(arg);
+      }
+    }
+    // replace all $ARGUMENTS
+    while (skill_body.find("$ARGUMENTS") != std::string::npos && !args_str.empty())
+      skill_body.replace(skill_body.find("$ARGUMENTS"), 2, args_str);
+
+    for (size_t i = 0; i < args.size(); ++i) {
+      std::vector<std::string> placeholders = {
+        "$ARGUMENTS[" + std::to_string(i) + "]", // $ARGUMENTS[0]
+        "$" + std::to_string(i),                 // $0
+      };
+      for (const auto &placeholder : placeholders) {
+        size_t pos = skill_body.find(placeholder);
+        while (pos != std::string::npos) {
+          skill_body.replace(pos, placeholder.length(), args[i]);
+          pos = skill_body.find(placeholder, pos + args[i].length());
+        }
+      }
+    }
+    return skill_body;
   }
 };
