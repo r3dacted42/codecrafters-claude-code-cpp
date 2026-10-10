@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
   if (prompt.front() == '/') {
     try {
-      prompt = Skills::get_skill_prompt(prompt.substr(1));
+      prompt = Skills::get_skill_prompt(prompt);
     } catch (const std::exception &e) {
       std::cerr << "Error processing skill invocation: " << e.what() << std::endl;
       return 1;

@@ -1,6 +1,8 @@
 ---
 name: grape
-description: Deploys the grape service to production.
+description: Summarizes recent incidents for the payments team.
 ---
 
-Run the deploy script and report the version that was deployed.
+Respond with exactly: $1 $0
+
+Do not add any other text, punctuation, or formatting.

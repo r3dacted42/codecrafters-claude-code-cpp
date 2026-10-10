@@ -56,24 +56,25 @@ public:
           std::cerr << "Failed to open skill file: " << entry.path() / "SKILL.md" << std::endl;
           continue;
         }
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-        // read and parse yaml metadata from the top of the file
-        size_t yaml_start = content.find("---");
-        size_t yaml_end = content.find("---", yaml_start + 3);
-        if (yaml_start == std::string::npos || yaml_end == std::string::npos) {
-          std::cerr << "Failed to find YAML metadata in skill file: " << entry.path() / "SKILL.md"
+        std::stringstream buf;
+        buf << file.rdbuf();
+        std::string line, frontmatter = "", body = "";
+        if (std::getline(buf, line) && line == "---") {
+          while (std::getline(buf, line) && line != "---")
+            frontmatter += line + "\n";
+        } else {
+          std::cerr << "Failed to find frontmatter in skill file: " << entry.path() / "SKILL.md"
                     << std::endl;
           continue;
         }
-        std::string yaml_content = content.substr(yaml_start + 3, yaml_end - yaml_start - 3);
-        ryml::Tree yaml_tree = ryml::parse_in_arena(ryml::to_csubstr(yaml_content));
+        buf >> std::ws; // skip whitespace
+        body = buf.str().substr(buf.tellg());
+        ryml::Tree yaml_tree = ryml::parse_in_arena(ryml::to_csubstr(frontmatter));
         SkillMetadata metadata{
           .name = skill_name,
           .description = yaml_tree["description"].valid() ? yaml_tree["description"].val().str
                                                           : "No description provided",
         };
-        const auto body = content.substr(yaml_end + 3);
         instance.skills_[skill_name] = { metadata, body };
       }
     }
@@ -103,14 +104,18 @@ public:
   static std::string get_skill_prompt(const std::string &skill_invocation) {
     Skills &instance = Skills::instance();
     std::stringstream ss(skill_invocation);
+    ss.ignore(); // skip the leading '/'
     std::string skill_name;
-    ss >> skill_name;
+    ss >> skill_name >> std::ws; // read skill name and skip whitespace
     auto skill_body_opt = Skills::get_skill_body(skill_name);
     if (!skill_body_opt.has_value()) {
       throw std::runtime_error("Skill not found: " + skill_name);
     }
     std::string skill_body = *skill_body_opt;
     std::string args_str = ss.str().substr(ss.tellg());
+    if (args_str.empty()) {
+      return skill_body;
+    }
     std::vector<std::string> args;
     while (ss) {
       std::string arg;
@@ -121,7 +126,7 @@ public:
     }
     // replace all $ARGUMENTS
     while (skill_body.find("$ARGUMENTS") != std::string::npos && !args_str.empty())
-      skill_body.replace(skill_body.find("$ARGUMENTS"), 2, args_str);
+      skill_body.replace(skill_body.find("$ARGUMENTS"), 10, args_str);
 
     for (size_t i = 0; i < args.size(); ++i) {
       std::vector<std::string> placeholders = {
