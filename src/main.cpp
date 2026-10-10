@@ -4,9 +4,9 @@
 
 #include "client.hpp"
 #include "read_file.hpp"
-#include "write_file.hpp"
 #include "run_bash_cmd.hpp"
 #include "skills.hpp"
+#include "write_file.hpp"
 
 int main(int argc, char *argv[]) {
   if (argc < 3 || std::string(argv[1]) != "-p") {
@@ -39,8 +39,9 @@ int main(int argc, char *argv[]) {
   REGISTER_TOOL(client, write_file)
   REGISTER_TOOL(client, run_bash_cmd)
 
-  Skills::load_skills(fs::path(".claude/skills"));
-  client.set_system_prompt("You have access to the following skills:\n\n" + Skills::get_metadata_str());
+  if (Skills::load_skills(fs::path(".claude/skills")))
+    client.set_system_prompt(Skills::get_metadata_str());
+
   api::Message user_message{ "user", prompt };
   std::string response;
   try {

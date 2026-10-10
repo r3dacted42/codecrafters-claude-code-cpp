@@ -39,14 +39,12 @@ public:
   Skills(const Skills &) = delete;
   Skills &operator=(const Skills &) = delete;
 
-  static void load_skills(const fs::path &skills_dir) {
+  static bool load_skills(const fs::path &skills_dir) {
     Skills &instance = Skills::instance();
     instance.skills_.clear();
 
     if (!fs::exists(skills_dir) || !fs::is_directory(skills_dir)) {
-      std::cerr << "Skills directory does not exist or is not a directory: " << skills_dir
-                << std::endl;
-      return;
+      return false;
     }
 
     for (const auto &entry : fs::directory_iterator(skills_dir)) {
@@ -78,11 +76,13 @@ public:
         instance.skills_[skill_name] = { metadata, body };
       }
     }
+    return true;
   }
 
   static std::string get_metadata_str() {
     Skills &instance = Skills::instance();
     std::stringstream ss;
+    ss << "You have access to the following skills:\n\n";
     for (const auto &pair : instance.skills_) {
       const auto &skill_metadata = pair.second.metadata;
       ss << "- " << skill_metadata.name << ": " << skill_metadata.description << "\n";
