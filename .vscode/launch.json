@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/claude-code",
-      "args": ["-p", "/kestrel"],
+      "args": ["-p", "/apple /grape 4127"],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],

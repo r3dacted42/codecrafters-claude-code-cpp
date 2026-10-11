@@ -32,8 +32,15 @@ public:
   using tools::Registry::register_tool;
   using tools::Registry::unregister_tool;
 
-  std::string chat(const std::string model, const api::Message &message) {
+  void add_message(const api::Message &message) {
     messages_.push_back(message);
+  }
+
+  void add_messages(const std::vector<api::Message> &messages) {
+    messages_.insert(messages_.end(), messages.begin(), messages.end());
+  }
+
+  std::string chat(const std::string model) {
     bool looping = true;
     while (looping) {
       looping = false;

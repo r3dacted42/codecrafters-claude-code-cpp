@@ -1,8 +1,6 @@
 ---
 name: apple
-description: Deploys the billing service to production.
+description: Reports the deploy target for the apple service.
 ---
 
-Respond with exactly: $ARGUMENTS
-
-Do not add any other text, punctuation, or formatting.
+Add this exact line to your response: blueberry-$ARGUMENTS

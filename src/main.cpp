@@ -44,17 +44,22 @@ int main(int argc, char *argv[]) {
 
   if (prompt.front() == '/') {
     try {
-      prompt = Skills::get_skill_prompt(prompt);
+      const auto prompts = Skills::get_prompts(prompt);
+      std::vector<api::Message> messages;
+      std::transform(prompts.begin(), prompts.end(), std::back_inserter(messages),
+                     [](const std::string &p) { return api::Message{ "user", p }; });
+      client.add_messages(messages);
     } catch (const std::exception &e) {
       std::cerr << "Error processing skill invocation: " << e.what() << std::endl;
       return 1;
     }
+  } else {
+    client.add_message({ "user", prompt });
   }
-  api::Message user_message{ "user", prompt };
 
   std::string response;
   try {
-    response = client.chat(model_name, user_message);
+    response = client.chat(model_name);
   } catch (const std::exception &e) {
     std::cerr << "Error during chat: " << e.what() << std::endl;
     return 1;

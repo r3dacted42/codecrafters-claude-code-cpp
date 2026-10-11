@@ -42,8 +42,6 @@ public:
 
   static bool load_skills(const fs::path &skills_dir) {
     Skills &instance = Skills::instance();
-    instance.skills_.clear();
-
     if (!fs::exists(skills_dir) || !fs::is_directory(skills_dir)) {
       return false;
     }
@@ -68,13 +66,21 @@ public:
           continue;
         }
         buf >> std::ws; // skip whitespace
+        if (!buf || buf.tellg() == std::streampos(-1)) {
+          std::cerr << "Failed to read skill body in skill file: " << entry.path() / "SKILL.md"
+                    << std::endl;
+          continue;
+        }
         body = buf.str().substr(buf.tellg());
         ryml::Tree yaml_tree = ryml::parse_in_arena(ryml::to_csubstr(frontmatter));
-        SkillMetadata metadata{
-          .name = skill_name,
-          .description = yaml_tree["description"].valid() ? yaml_tree["description"].val().str
-                                                          : "No description provided",
-        };
+        SkillMetadata metadata{ .name = skill_name };
+        if (yaml_tree["description"].valid()) {
+          metadata.description = yaml_tree["description"].val().str;
+        } else {
+          std::cerr << "Failed to find description in frontmatter of skill file: "
+                    << entry.path() / "SKILL.md" << std::endl;
+          continue;
+        }
         instance.skills_[skill_name] = { metadata, body };
       }
     }
@@ -92,44 +98,25 @@ public:
     return ss.str();
   }
 
-  static std::optional<std::string> get_skill_body(const std::string &skill_name) {
+  static std::string get_skill_prompt(const std::string &skill_name,
+                                      const std::vector<std::string> &args) {
     Skills &instance = Skills::instance();
-    auto it = instance.skills_.find(skill_name);
-    if (it != instance.skills_.end()) {
-      return it->second.body;
-    }
-    return std::nullopt;
-  }
-
-  static std::string get_skill_prompt(const std::string &skill_invocation) {
-    Skills &instance = Skills::instance();
-    std::stringstream ss(skill_invocation);
-    ss.ignore(); // skip the leading '/'
-    std::string skill_name;
-    ss >> skill_name >> std::ws; // read skill name and skip whitespace
-    auto skill_body_opt = Skills::get_skill_body(skill_name);
-    if (!skill_body_opt.has_value()) {
+    if (!instance.skills_.contains(skill_name)) {
       throw std::runtime_error("Skill not found: " + skill_name);
     }
-    std::string skill_body = *skill_body_opt, args_str = "";
-    std::getline(ss, args_str);
-    if (args_str.empty()) {
+    std::string skill_body = instance.skills_.at(skill_name).body;
+    if (args.empty()) {
       return skill_body;
     }
-    ss.clear();
-    ss.str(args_str);
-    std::vector<std::string> args;
-    while (ss) {
-      std::string arg;
-      ss >> arg;
-      if (!arg.empty()) {
-        args.push_back(arg);
-      }
+    std::string args_str = "";
+    for (const auto &arg : args) {
+      args_str += arg + " ";
     }
+    args_str.pop_back(); // remove trailing space
     // replace all $ARGUMENTS
-    while (skill_body.find("$ARGUMENTS") != std::string::npos && !args_str.empty())
+    while (skill_body.find("$ARGUMENTS") != std::string::npos && !args_str.empty()) {
       skill_body.replace(skill_body.find("$ARGUMENTS"), 10, args_str);
-
+    }
     for (size_t i = 0; i < args.size(); ++i) {
       std::vector<std::string> placeholders = {
         "$ARGUMENTS[" + std::to_string(i) + "]", // $ARGUMENTS[0]
@@ -144,5 +131,33 @@ public:
       }
     }
     return skill_body;
+  }
+
+  static std::vector<std::string> get_prompts(const std::string &skill_invocation) {
+    Skills &instance = Skills::instance();
+    std::stringstream ss(skill_invocation);
+    std::vector<std::string> skills, args;
+    bool args_start = false;
+    while (ss) {
+      std::string part;
+      ss >> part;
+      if (part.empty())
+        continue;
+      if (!args_start && part.front() == '/') {
+        if (!instance.skills_.contains(part.substr(1))) {
+          args_start = true;
+          args.push_back(part);
+          continue;
+        }
+        skills.push_back(part.substr(1));
+        continue;
+      }
+      args.push_back(part);
+    }
+    std::vector<std::string> prompts;
+    for (const auto &skill : skills) {
+      prompts.push_back(get_skill_prompt(skill, args));
+    }
+    return prompts;
   }
 };
